@@ -1,22 +1,32 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify, request
+import re
 
 app = Flask(__name__)
 
-@app.route("/add", methods=["POST"])
-def add():
-    data = request.get_json()
+ITEMS = []
 
-    if not data or "a" not in data or "b" not in data:
-        return jsonify({"error": "Invalid input"}), 400
+def is_valid_name(name: str) -> bool:
+    """Allow only alphanumeric names up to 64 chars."""
+    return bool(re.match(r'^[a-zA-Z0-9 ]{1,64}$', name))
 
-    try:
-        a = float(data["a"])
-        b = float(data["b"])
-    except (ValueError, TypeError):
-        return jsonify({"error": "Inputs must be numbers"}), 400
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"}), 200
 
-    return jsonify({"result": a + b})
+@app.route('/items', methods=['GET'])
+def list_items():
+    return jsonify({"items": ITEMS}), 200
 
+@app.route('/items', methods=['POST'])
+def add_item():
+    data = request.get_json(silent=True)
+    if not data or 'name' not in data:
+        return jsonify({"error": "Missing 'name' field"}), 400
+    name = data['name']
+    if not isinstance(name, str) or not is_valid_name(name):
+        return jsonify({"error": "Invalid name"}), 422
+    ITEMS.append(name)
+    return jsonify({"added": name}), 201
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
