@@ -37,7 +37,7 @@ jobs:
           docker build -t secure-app .
 
       - name: Container Scan (Trivy)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.24.0
         with:
           image-ref: secure-app
           format: table
